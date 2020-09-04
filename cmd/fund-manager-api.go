@@ -21,27 +21,32 @@ func main() {
 		Register("server").
 		SetShortDescription("Run server mode.").
 		AddFlag("config,c", "The path to config file", commando.String, config.ConfigFile).
-		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			configFile, _ := flags["config"].GetString()
-
-			config := config.Load(configFile)
-
-			server.Start(&config)
-		})
+		SetAction(serverCommand)
 
 	commando.
 		Register("encrypt-db-password").
 		SetShortDescription("This command encrypt the password database.").
 		AddArgument("data", "The data to must be encrypted", "").
-		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			value := args["data"].Value
-
-			encryptedValue := crypt.EncryptAsString([]byte(value), "database")
-
-			fmt.Println()
-			fmt.Println("Encrypted password:", encryptedValue)
-			fmt.Println()
-		})
+		SetAction(encryptDbPasswordCommand)
 
 	commando.Parse([]string{"help"})
+}
+
+func serverCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+	configFile, _ := flags["config"].GetString()
+
+	config := config.Load(configFile)
+
+	server.Start(&config)
+
+}
+
+func encryptDbPasswordCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+	value := args["data"].Value
+
+	encryptedValue := crypt.EncryptAsString([]byte(value), "database")
+
+	fmt.Println()
+	fmt.Println("Encrypted password:", encryptedValue)
+	fmt.Println()
 }
