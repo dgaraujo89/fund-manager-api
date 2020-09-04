@@ -3,7 +3,9 @@ package server
 import (
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/diegogomesaraujo/fund-manager-api/internal/config"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -24,12 +26,16 @@ func configureRoutes() *mux.Router {
 	return router
 }
 
-// StartServer to listen connections
-func StartServer(addressingListen string, allowedOrigins []string, allowedMethods []string) {
+// Start server to listen connections
+func Start(config *config.Config) {
+	port := strconv.FormatInt(config.Server.Port, 10)
+
+	addressingListen := config.Server.Host + ":" + port
+
 	router := configureRoutes()
 
-	allowedOriginsCors := handlers.AllowedOrigins(allowedOrigins)
-	allowedMethodsCors := handlers.AllowedMethods(allowedMethods)
+	allowedOriginsCors := handlers.AllowedOrigins(config.Server.AllowOrigins)
+	allowedMethodsCors := handlers.AllowedMethods(config.Server.AllowMethods)
 
 	log.Printf("Server starting on %v...\n", addressingListen)
 

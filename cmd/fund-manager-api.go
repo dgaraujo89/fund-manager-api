@@ -1,29 +1,47 @@
 package main
 
 import (
-	"os"
+	"fmt"
 
+	"github.com/diegogomesaraujo/fund-manager-api/internal/config"
+	"github.com/diegogomesaraujo/fund-manager-api/internal/crypt"
 	"github.com/diegogomesaraujo/fund-manager-api/internal/server"
+	"github.com/thatisuday/commando"
 )
 
 const version = "0.0.1"
 
 func main() {
-	host := os.Getenv("SERVER_HOST")
-	port := os.Getenv("SERVER_PORT")
+	commando.
+		SetExecutableName("fund-manager-api").
+		SetVersion(version).
+		SetDescription("Fund Manager API")
 
-	if host == "" {
-		host = "localhost"
-	}
+	commando.
+		Register("server").
+		SetShortDescription("Run server mode.").
+		AddFlag("config,c", "The path to config file", commando.String, config.ConfigFile).
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			configFile, _ := flags["config"].GetString()
 
-	if port == "" {
-		port = "8080"
-	}
+			config := config.Load(configFile)
 
-	allowedOrigins := []string{"*"}
-	allowedMethods := []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+			server.Start(&config)
+		})
 
-	server.StartServer(host+":"+port, allowedOrigins, allowedMethods)
+	commando.
+		Register("encrypt-db-password").
+		SetShortDescription("This command encrypt the password database.").
+		AddArgument("data", "The data to must be encrypted", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			value := args["data"].Value
 
-	os.Exit(0)
+			encryptedValue := crypt.EncryptAsString([]byte(value), "database")
+
+			fmt.Println()
+			fmt.Println("Encrypted password:", encryptedValue)
+			fmt.Println()
+		})
+
+	commando.Parse([]string{"help"})
 }
