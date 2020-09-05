@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/diegogomesaraujo/fund-manager-api/internal/config"
-	"github.com/diegogomesaraujo/fund-manager-api/internal/crypt"
+	"github.com/diegogomesaraujo/fund-manager-api/internal/db"
 	"github.com/diegogomesaraujo/fund-manager-api/internal/server"
 	"github.com/thatisuday/commando"
 )
@@ -29,7 +30,13 @@ func main() {
 		AddArgument("data", "The data to must be encrypted", "").
 		SetAction(encryptDbPasswordCommand)
 
-	commando.Parse([]string{"help"})
+	commando.
+		Register("test-database").
+		SetShortDescription("This command test the database connection configuration").
+		AddFlag("config,c", "The path to config file", commando.String, config.ConfigFile).
+		SetAction(testDbConnCommand)
+
+	commando.Parse(nil)
 }
 
 func serverCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
@@ -42,11 +49,26 @@ func serverCommand(args map[string]commando.ArgValue, flags map[string]commando.
 }
 
 func encryptDbPasswordCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-	value := args["data"].Value
-
-	encryptedValue := crypt.EncryptAsString([]byte(value), "database")
+	encryptedValue := db.EncryptDbUserPassword(args["data"].Value)
 
 	fmt.Println()
 	fmt.Println("Encrypted password:", encryptedValue)
 	fmt.Println()
+}
+
+func testDbConnCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+	configFile, _ := flags["config"].GetString()
+
+	config := config.Load(configFile)
+
+	log.Println("Opening database connection...")
+
+	db.Open(&config)
+
+	log.Println("Database connected with success.")
+	log.Println("Closing database connection...")
+
+	db.Close()
+
+	log.Println("Database connection closed.")
 }

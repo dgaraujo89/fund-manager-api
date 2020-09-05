@@ -8,7 +8,7 @@ import (
 )
 
 // ConfigFile default
-const ConfigFile = "configs/config.toml"
+const ConfigFile = "config/config.cfg"
 
 // Load is a function read de configurations
 func Load(filePath string) Config {

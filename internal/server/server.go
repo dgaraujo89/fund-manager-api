@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var server http.Server
+
 func configureRoutes() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -39,9 +41,21 @@ func Start(config *config.Config) {
 
 	log.Printf("Server starting on %v...\n", addressingListen)
 
-	err := http.ListenAndServe(addressingListen, handlers.CORS(allowedOriginsCors, allowedMethodsCors)(router))
+	server := &http.Server{
+		Addr:    addressingListen,
+		Handler: handlers.CORS(allowedOriginsCors, allowedMethodsCors)(router),
+	}
+
+	err := server.ListenAndServe()
 
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
+
+// // Shutdown
+// func Shutdown() {
+// 	context, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+
+// 	server.Shutdown()
+// }
