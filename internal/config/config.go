@@ -12,7 +12,7 @@ const ConfigFile = "config/config.cfg"
 
 // Load is a function read de configurations
 func Load(filePath string) Config {
-	log.Println("loading configs...")
+	log.Println("Loading configs...")
 
 	var config Config
 

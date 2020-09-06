@@ -1,22 +1,19 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/diegogomesaraujo/fund-manager-api/internal/config"
 	"github.com/diegogomesaraujo/fund-manager-api/internal/crypt"
-
-	// import mysql drive to create a connection with mysql database
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 const cryptPasswordPassphrase = "database"
 
-var db *sql.DB
+var dbGorm *gorm.DB
 
 // Open the connection with database
 func Open(config *config.Config) {
@@ -26,30 +23,53 @@ func Open(config *config.Config) {
 	url := config.Database.Username + ":" + password + "@tcp(" + host + ")/" + config.Database.Database
 
 	var err error
-	if db, err = sql.Open("mysql", url); err != nil {
-		log.Fatalln(err)
+	dbGorm, err = gorm.Open(mysql.Open(url), &gorm.Config{})
+
+	if err != nil {
 		panic(err.Error)
 	}
 
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
+	db, err := dbGorm.DB()
+	if err != nil {
+		panic(err.Error)
+	}
+
 	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+	db.SetConnMaxLifetime(time.Hour)
 }
 
 // Close the connection with database
 func Close() {
-	if err := db.Close(); err != nil {
+	db, err := dbGorm.DB()
+	if err != nil {
+		panic(err.Error)
+	}
+
+	db.Close()
+}
+
+// Ping database
+func Ping() {
+	db, err := dbGorm.DB()
+	if err != nil {
+		panic(err.Error)
+	}
+
+	err = db.Ping()
+
+	if err != nil {
 		panic(err.Error)
 	}
 }
 
 // GetDb return a database connection
-func GetDb() (*sql.DB, error) {
-	if db == nil {
-		return db, errors.New("No database connections open")
+func GetDb() (*gorm.DB, error) {
+	if dbGorm == nil {
+		return dbGorm, errors.New("No database connections open")
 	}
 
-	return db, nil
+	return dbGorm, nil
 }
 
 // EncryptDbUserPassword encrypt the database user password

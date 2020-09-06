@@ -44,8 +44,8 @@ func serverCommand(args map[string]commando.ArgValue, flags map[string]commando.
 
 	config := config.Load(configFile)
 
+	db.Open(&config)
 	server.Start(&config)
-
 }
 
 func encryptDbPasswordCommand(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
@@ -62,12 +62,15 @@ func testDbConnCommand(args map[string]commando.ArgValue, flags map[string]comma
 	config := config.Load(configFile)
 
 	log.Println("Opening database connection...")
-
 	db.Open(&config)
 
 	log.Println("Database connected with success.")
-	log.Println("Closing database connection...")
 
+	log.Println("Testing...")
+	db.Ping()
+	log.Println("Connection alive.")
+
+	log.Println("Closing database connection...")
 	db.Close()
 
 	log.Println("Database connection closed.")

@@ -7,5 +7,6 @@ import (
 type routes []webresources.Routes
 
 var routesList = routes{
-	webresources.HomeRoutes,
+	// webresources.HomeRoutes,
+	webresources.StocksRoutes,
 }
